@@ -16,7 +16,15 @@ Public packages on GHCR, `linux/arm64`, with immutable semver tags:
 - [Spec #1](https://github.com/jangroth/homekube-bakery/issues/1): what is being built, and why
 - [`GLOSSARY.md`](GLOSSARY.md): project vocabulary
 - [`docs/adr/`](docs/adr/): architectural decisions
-- `CONTRACT.md` (coming): what each image guarantees its consumers
+- [`CONTRACT.md`](CONTRACT.md): what each image guarantees its consumers
+
+## Running the contract tests locally
+
+Needs Docker on an arm64 host and [bats](https://github.com/bats-core/bats-core). Builds the image and runs its contract tests:
+
+```sh
+./test.sh coder-workspace
+```
 
 ## Changing the contract
 
