@@ -1,4 +1,4 @@
-# A TLS server whose certificate is signed by a throwaway test CA, for checking which CAs a consumer trusts.
+# Requires consumer.bash to be loaded.
 
 TLS_IMAGE=alpine/openssl@sha256:6821afa2476e11be343f29275f2ca24291720ff0a7148bd131fd8e314ff26d9e
 export TLS_HOST=tls-server
@@ -6,15 +6,16 @@ export TLS_HOST=tls-server
 # Writes ca.crt, server.crt and server.key for $TLS_HOST to the given directory.
 make_test_ca() {
   mkdir -p "$1"
-  docker run --rm -v "$1:/pki" -w /pki --entrypoint sh "$TLS_IMAGE" -c "
+  local log
+  log=$(docker run --rm -v "$1:/pki" -w /pki --entrypoint sh "$TLS_IMAGE" -c "
     openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj '/CN=bakery test CA' -keyout ca.key -out ca.crt &&
     openssl req -newkey rsa:2048 -nodes -subj '/CN=$TLS_HOST' -addext 'subjectAltName=DNS:$TLS_HOST' -keyout server.key -out server.csr &&
     openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -days 1 -copy_extensions copy -out server.crt &&
     chmod 644 ca.crt server.crt
-  " 2>/dev/null
+  " 2>&1) || { echo "$log" >&2; return 1; }
 }
 
-# Starts the server on a fresh network; sets TLS_NETWORK.
+# Starts the server on a fresh network and waits until it accepts connections; sets TLS_NETWORK and TLS_CONTAINER.
 start_tls_server() {
   export TLS_NETWORK="bakery-tls-$$"
   export TLS_CONTAINER="bakery-tls-$$"
@@ -34,4 +35,10 @@ start_tls_server() {
 stop_tls_server() {
   docker rm -f "$TLS_CONTAINER" >/dev/null 2>&1 || true
   docker network rm "$TLS_NETWORK" >/dev/null 2>&1 || true
+}
+
+# Usage: curl_tls_server <docker run options>...
+curl_tls_server() {
+  run_as_coder_with --network "$TLS_NETWORK" "$@" -- \
+    curl -fsS -o /dev/null "https://$TLS_HOST/"
 }
