@@ -35,3 +35,25 @@ setup() {
   [ "$status" -eq 0 ]
   [ "$output" = "ok" ]
 }
+
+@test "curl, git, ssh, bash and tree run as uid 1000" {
+  run_as_coder sh -c 'curl --version && git --version && ssh -V && bash --version && tree --version'
+  [ "$status" -eq 0 ]
+}
+
+@test "uid 1000 can create files in /tmp" {
+  run_as_coder sh -c 'f="$(mktemp /tmp/probe.XXXXXX)" && echo ok > "$f" && cat "$f"'
+  [ "$status" -eq 0 ]
+  [ "$output" = "ok" ]
+}
+
+@test "the Coder agent init script's commands are present and runnable" {
+  run_as_coder sh -c 'curl --version && mktemp --version && chmod --version && head --version && grep --version'
+  [ "$status" -eq 0 ]
+}
+
+@test "the CA bundle is at /etc/ssl/certs/ca-certificates.crt" {
+  run_as_coder grep -c "BEGIN CERTIFICATE" /etc/ssl/certs/ca-certificates.crt
+  [ "$status" -eq 0 ]
+  [ "$output" -gt 0 ]
+}
