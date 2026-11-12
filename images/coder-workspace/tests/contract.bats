@@ -52,6 +52,35 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
+@test "opencode prints its version as uid 1000 with an empty home" {
+  run_as_coder opencode --version
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]
+}
+
+@test "opencode and its directory are owned by root" {
+  run_as_coder sh -c 'bin="$(command -v opencode)" && stat -c %U "$bin" "$(dirname "$bin")"'
+  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = "root" ]
+  [ "${lines[1]}" = "root" ]
+}
+
+@test "uid 1000 cannot write to opencode or its directory" {
+  run_as_coder sh -c 'bin="$(command -v opencode)" && [ ! -w "$bin" ] && [ ! -w "$(dirname "$bin")" ]'
+  [ "$status" -eq 0 ]
+}
+
+@test "OpenCode creates its config and state under /home/coder on first use" {
+  run_as_coder_with --network none -- sh -c 'opencode session list --standalone >/dev/null 2>&1 \
+    && test -d "$HOME/.config/opencode" && test -f "$HOME/.local/share/opencode/opencode.db" && echo ok'
+  [ "$status" -eq 0 ]
+  [ "$output" = "ok" ]
+}
+
+@test "the uncompressed image is within its 535 MB size budget" {
+  [ "$(image_size)" -le 535000000 ]
+}
+
 @test "the CA bundle is at /etc/ssl/certs/ca-certificates.crt" {
   run_as_coder grep -c "BEGIN CERTIFICATE" /etc/ssl/certs/ca-certificates.crt
   [ "$status" -eq 0 ]

@@ -22,3 +22,8 @@ run_as_coder_with() {
 image_default_user() {
   docker image inspect --format '{{.Config.User}}' "$IMAGE"
 }
+
+# Uncompressed bytes; `docker image inspect .Size` is compressed under the containerd image store.
+image_size() {
+  docker history --human=false --format '{{.Size}}' "$IMAGE" | awk '{ s += $1 } END { print s }'
+}

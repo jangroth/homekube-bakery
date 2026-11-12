@@ -4,7 +4,7 @@ What each bakery image guarantees its consumers. Every requirement is enforced b
 
 ## Coder workspace image
 
-Tests run the image as the Coder template does: as `1000:1000`, with no-new-privileges, all capabilities dropped, and an empty uid-1000-owned tmpfs over `/home/coder`. The one exception is the default-user test, which reads the image config, because running as `1000:1000` would hide the default.
+Tests run the image as the Coder template does: as `1000:1000`, with no-new-privileges, all capabilities dropped, and an empty uid-1000-owned tmpfs over `/home/coder`. The exceptions are the default-user test, which reads the image config because running as `1000:1000` would hide the default, and the size-budget test, which reads the image's layers.
 
 | Requirement | Contract test |
 |---|---|
@@ -17,6 +17,11 @@ Tests run the image as the Coder template does: as `1000:1000`, with no-new-priv
 | `curl`, `git`, `ssh`, `bash` and `tree` run as uid 1000 | [`curl, git, ssh, bash and tree run as uid 1000`](images/coder-workspace/tests/contract.bats) |
 | uid 1000 can create files in `/tmp`, where the Coder agent keeps its binary, logs and socket | [`uid 1000 can create files in /tmp`](images/coder-workspace/tests/contract.bats) |
 | `sh`, `curl`, `mktemp`, `chmod`, `head` and `grep` are present for the Coder agent init script | [`the Coder agent init script's commands are present and runnable`](images/coder-workspace/tests/contract.bats) |
+| `opencode` is on `PATH` and runs as uid 1000 with an empty home | [`opencode prints its version as uid 1000 with an empty home`](images/coder-workspace/tests/contract.bats) |
+| `opencode` and its directory are owned by root | [`opencode and its directory are owned by root`](images/coder-workspace/tests/contract.bats) |
+| uid 1000 cannot write to `opencode` or its directory | [`uid 1000 cannot write to opencode or its directory`](images/coder-workspace/tests/contract.bats) |
+| OpenCode keeps its config and state under `/home/coder`, so they persist with the Workspace | [`OpenCode creates its config and state under /home/coder on first use`](images/coder-workspace/tests/contract.bats) |
+| The uncompressed image is at most 535 MB | [`the uncompressed image is within its 535 MB size budget`](images/coder-workspace/tests/contract.bats) |
 | The CA bundle is at `/etc/ssl/certs/ca-certificates.crt` | [`the CA bundle is at /etc/ssl/certs/ca-certificates.crt`](images/coder-workspace/tests/contract.bats) |
 | `curl` honours a CA bundle passed through `CURL_CA_BUNDLE` | [`curl trusts a CA bundle passed through CURL_CA_BUNDLE`](images/coder-workspace/tests/ca.bats) |
 | The CA-bundle init step (`sh` and `cat` concatenating the system bundle with an extra CA) works under the restricted securityContext | [`the CA-bundle init step runs restricted and keeps the system CAs alongside the extra CA`](images/coder-workspace/tests/ca.bats) |
