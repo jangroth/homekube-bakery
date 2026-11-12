@@ -25,8 +25,8 @@ setup() {
 }
 
 @test "no setuid or setgid binaries exist" {
-  # Directories uid 1000 can't traverse hold nothing it could execute.
-  run_as_coder sh -c 'find / -xdev -type f -perm /6000 2>/dev/null'
+  # Only permission errors are tolerated: directories uid 1000 can't traverse hold nothing it could execute.
+  run_as_coder sh -c 'find / -xdev -type f -perm /6000 2>&1 | grep -v "Permission denied"'
   [ -z "$output" ]
 }
 

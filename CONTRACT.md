@@ -4,7 +4,7 @@ What each bakery image guarantees its consumers. Every requirement is enforced b
 
 ## Coder workspace image
 
-Tests run the image as the Coder template does: as `1000:1000`, with no-new-privileges, all capabilities dropped, and an empty uid-1000-owned tmpfs over `/home/coder`.
+Tests run the image as the Coder template does: as `1000:1000`, with no-new-privileges, all capabilities dropped, and an empty uid-1000-owned tmpfs over `/home/coder`. The one exception is the default-user test, which reads the image config, because running as `1000:1000` would hide the default.
 
 | Requirement | Contract test |
 |---|---|
