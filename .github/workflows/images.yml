@@ -14,28 +14,12 @@ jobs:
       images: ${{ steps.images.outputs.images }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - id: filter
-        if: github.event_name == 'push'
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
-          filters: |
-            shared: &shared
-              - 'test/helpers/**'
-              - 'test.sh'
-              - '.github/workflows/images.yml'
-            coder-workspace:
-              - *shared
-              - 'images/coder-workspace/**'
+          fetch-depth: 0
       - id: images
         env:
-          CHANGED: ${{ steps.filter.outputs.changes }}
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
-            images=$(ls images | jq -Rnc '[inputs]')
-          else
-            images=$(jq -c 'map(select(. != "shared"))' <<<"$CHANGED")
-          fi
-          echo "images=$images" >> "$GITHUB_OUTPUT"
+          BEFORE: ${{ github.event.before }}
+        run: echo "images=$(.github/scripts/changed-images.sh "$GITHUB_EVENT_NAME" "$BEFORE")" >> "$GITHUB_OUTPUT"
 
   test:
     needs: changes
