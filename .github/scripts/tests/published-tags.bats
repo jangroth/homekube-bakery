@@ -13,8 +13,8 @@ teardown() {
   wait "$registry_pid" 2>/dev/null || true
 }
 
-# Usage: publish <repository> <tags.json body>
-publish() {
+# Usage: registry_has_tags <repository> <tags.json body>
+registry_has_tags() {
   mkdir -p "$registry_dir/$1"
   echo "$2" >"$registry_dir/$1/tags.json"
 }
@@ -24,7 +24,7 @@ published_tags() {
 }
 
 @test "a published image's tags are listed one per line" {
-  publish jangroth/homekube-bakery/coder-workspace '{"name":"jangroth/homekube-bakery/coder-workspace","tags":["0.2.0","sha256-0a1b2c.att","0.2.1"]}'
+  registry_has_tags jangroth/homekube-bakery/coder-workspace '{"name":"jangroth/homekube-bakery/coder-workspace","tags":["0.2.0","sha256-0a1b2c.att","0.2.1"]}'
   published_tags jangroth/homekube-bakery/coder-workspace
   [ "$status" -eq 0 ]
   [ "$output" = $'0.2.0\nsha256-0a1b2c.att\n0.2.1' ]
@@ -48,14 +48,14 @@ published_tags() {
 }
 
 @test "an image whose tags were all deleted has no tags" {
-  publish jangroth/homekube-bakery/coder-workspace '{"name":"jangroth/homekube-bakery/coder-workspace","tags":null}'
+  registry_has_tags jangroth/homekube-bakery/coder-workspace '{"name":"jangroth/homekube-bakery/coder-workspace","tags":null}'
   published_tags jangroth/homekube-bakery/coder-workspace
   [ "$status" -eq 0 ]
   [ "$output" = "" ]
 }
 
 @test "a private image's tags are listed with GITHUB_TOKEN" {
-  publish jangroth/homekube-bakery/coder-workspace '{"name":"jangroth/homekube-bakery/coder-workspace","tags":["0.2.0"]}'
+  registry_has_tags jangroth/homekube-bakery/coder-workspace '{"name":"jangroth/homekube-bakery/coder-workspace","tags":["0.2.0"]}'
   echo "token:s3cret" >"$registry_dir/credentials"
   GITHUB_TOKEN=s3cret published_tags jangroth/homekube-bakery/coder-workspace
   [ "$status" -eq 0 ]
@@ -67,6 +67,6 @@ published_tags() {
   for bad in '' Jangroth/homekube-bakery/coder-workspace 'jangroth/coder workspace' $'jangroth/homekube-bakery/coder-workspace\r' /coder-workspace jangroth//coder-workspace; do
     published_tags "$bad"
     [ "$status" -ne 0 ]
-    [[ "$output" == *"expected a lowercase repository path"* ]]
+    [ "$output" = "published-tags.sh: expected a lowercase repository path, got '$bad'" ]
   done
 }
