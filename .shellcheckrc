@@ -1,0 +1,2 @@
+# Single-quoted commands run inside the container under test.
+disable=SC2016

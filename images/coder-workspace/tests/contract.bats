@@ -6,6 +6,10 @@ setup() {
   [ "$(image_default_user)" = "coder" ]
 }
 
+@test "the source label points at the bakery repo" {
+  [ "$(image_label org.opencontainers.image.source)" = "https://github.com/jangroth/homekube-bakery" ]
+}
+
 @test "uid 1000 is coder with gid 1000 and home /home/coder" {
   run_as_coder sh -c 'id; echo "$HOME"'
   [ "$status" -eq 0 ]

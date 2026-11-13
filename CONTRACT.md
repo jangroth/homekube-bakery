@@ -2,13 +2,31 @@
 
 What each bakery image guarantees its consumers. Every requirement is enforced by a contract test; an image is published only if all of them pass. Request changes as [issues in this repo](https://github.com/jangroth/homekube-bakery/issues).
 
+## Consuming an image
+
+| Image | Reference | Contract guaranteed from |
+|---|---|---|
+| Coder workspace image | `ghcr.io/jangroth/homekube-bakery/coder-workspace` | `0.2.0` |
+
+Tags are immutable `MAJOR.MINOR.PATCH` with no `v` and no `latest` ([ADR 0001](docs/adr/0001-semver-tags-with-computed-patch.md)). A major bump breaks the contract, a minor bump adds to it, and a patch keeps it. Each tag has a GitHub Release, tagged `<image>/<version>`.
+
+Pin by tag and digest, and place a `# renovate:` comment above the reference so Renovate keeps it current:
+
+```yaml
+# renovate: datasource=docker depName=ghcr.io/jangroth/homekube-bakery/coder-workspace
+image: ghcr.io/jangroth/homekube-bakery/coder-workspace:0.2.0@sha256:<digest>
+```
+
+Review major bumps by hand: they mean a requirement below changed or went away.
+
 ## Coder workspace image
 
-Tests run the image as the Coder template does: as `1000:1000`, with no-new-privileges, all capabilities dropped, and an empty uid-1000-owned tmpfs over `/home/coder`. The exceptions are the default-user test, which reads the image config because running as `1000:1000` would hide the default, and the size-budget test, which reads the image's layers.
+Tests run the image as the Coder template does: as `1000:1000`, with no-new-privileges, all capabilities dropped, and an empty uid-1000-owned tmpfs over `/home/coder`. The exceptions are the default-user and source-label tests, which read the image config (running as `1000:1000` would hide the default user), and the size-budget test, which reads the image's layers.
 
 | Requirement | Contract test |
 |---|---|
 | The default user is `coder` | [`default user is coder`](images/coder-workspace/tests/contract.bats) |
+| The `org.opencontainers.image.source` label points at this repo, so Renovate finds the release notes | [`the source label points at the bakery repo`](images/coder-workspace/tests/contract.bats) |
 | uid/gid 1000 is `coder`, with home `/home/coder` | [`uid 1000 is coder with gid 1000 and home /home/coder`](images/coder-workspace/tests/contract.bats) |
 | `coder`'s login shell in the user database is bash | [`coder's login shell is bash`](images/coder-workspace/tests/contract.bats) |
 | There is no `sudo` | [`there is no sudo`](images/coder-workspace/tests/contract.bats) |

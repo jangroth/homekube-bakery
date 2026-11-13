@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   changes:
     runs-on: ubuntu-24.04-arm
@@ -21,9 +25,17 @@ jobs:
           BEFORE: ${{ github.event.before }}
         run: echo "images=$(.github/scripts/changed-images.sh "$GITHUB_EVENT_NAME" "$BEFORE")" >> "$GITHUB_OUTPUT"
 
+  scripts:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: sudo apt-get update && sudo apt-get install -y bats shellcheck
+      - run: bats .github/scripts/tests
+      - run: ./lint.sh
+
   test:
     needs: changes
-    if: needs.changes.outputs.images != '[]'
+    if: needs.changes.outputs.images != '[]' && github.ref != 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -33,3 +45,84 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: sudo apt-get update && sudo apt-get install -y bats
       - run: ./test.sh ${{ matrix.image }}
+
+  publish:
+    needs: [changes, scripts]
+    if: needs.changes.outputs.images != '[]' && github.ref == 'refs/heads/main'
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJSON(needs.changes.outputs.images) }}
+    runs-on: ubuntu-24.04-arm
+    concurrency:
+      group: publish-${{ matrix.image }}
+    permissions:
+      contents: write
+      packages: write
+    env:
+      REPOSITORY: ${{ github.repository }}/${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: sudo apt-get update && sudo apt-get install -y bats
+      - name: Log in to GHCR
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin <<<"$GITHUB_TOKEN"
+      - name: Build and push untagged, by digest
+        id: build
+        run: |
+          docker buildx create --use --driver docker-container
+          docker buildx build --platform linux/arm64 \
+            --attest type=sbom --attest type=provenance,mode=max \
+            --output "type=image,name=ghcr.io/$REPOSITORY,push-by-digest=true,name-canonical=true,push=true" \
+            --metadata-file metadata.json "images/${{ matrix.image }}"
+          digest=$(jq -er '."containerimage.digest"' metadata.json)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+      - name: Run the contract tests against the pushed digest
+        run: ./test.sh ${{ matrix.image }} "ghcr.io/$REPOSITORY@${{ steps.build.outputs.digest }}"
+      - name: Compute the tag
+        id: tag
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          major_minor=$(tr -d '[:space:]' <"images/${{ matrix.image }}/VERSION")
+          tag=$(.github/scripts/published-tags.sh "$REPOSITORY" | .github/scripts/next-tag.sh "$major_minor")
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Refuse to overwrite a published tag
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          tags=$(.github/scripts/published-tags.sh "$REPOSITORY")
+          if grep -qFx "$TAG" <<<"$tags"; then
+            echo "::error::$REPOSITORY:$TAG is already published; tags are immutable."
+            exit 1
+          fi
+      - name: Tag the tested digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          docker buildx imagetools create -t "ghcr.io/$REPOSITORY:$TAG" "ghcr.io/$REPOSITORY@$DIGEST"
+          tagged=$(docker buildx imagetools inspect "ghcr.io/$REPOSITORY:$TAG" --format '{{json .Manifest}}' | jq -er .digest)
+          if [ "$tagged" != "$DIGEST" ]; then
+            echo "::error::$REPOSITORY:$TAG points at $tagged, not the tested $DIGEST."
+            exit 1
+          fi
+      - name: Create the git tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release create "${{ matrix.image }}/$TAG" --target "$GITHUB_SHA" --latest=false \
+            --title "${{ matrix.image }} $TAG" \
+            --notes "\`ghcr.io/$REPOSITORY:$TAG@$DIGEST\`, built from $GITHUB_SHA."
+      - name: Check the tag pulls anonymously
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          if ! DOCKER_CONFIG="$(mktemp -d)" docker pull "ghcr.io/$REPOSITORY:$TAG"; then
+            echo "::error::ghcr.io/$REPOSITORY:$TAG can't be pulled anonymously. On an image's first publish its GHCR package may start private: the operator makes it public in the GHCR web UI (package settings, Change visibility), which can't be undone."
+            exit 1
+          fi

@@ -23,8 +23,8 @@ start_tls_server() {
   docker run -d --name "$TLS_CONTAINER" --network "$TLS_NETWORK" --network-alias "$TLS_HOST" \
     -v "$1:/pki:ro" "$TLS_IMAGE" \
     s_server -quiet -www -accept 443 -cert /pki/server.crt -key /pki/server.key >/dev/null
-  local attempt
-  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  local _
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
     docker run --rm --network "$TLS_NETWORK" "$TLS_IMAGE" \
       s_client -connect "$TLS_HOST:443" </dev/null >/dev/null 2>&1 && return 0
     sleep 1

@@ -4,12 +4,12 @@ Builds and publishes the container images that [homekube](https://github.com/jan
 
 ## Images
 
-Public packages on GHCR, `linux/arm64`, with immutable semver tags:
+Public packages on GHCR, `linux/arm64`, with immutable semver tags. Pushes to `main` and manual runs on `main` publish; other branches only build and test. [`CONTRACT.md`](CONTRACT.md#consuming-an-image) says how to consume them.
 
-| Image | Reference | Consumer |
-|---|---|---|
-| Coder workspace image | `ghcr.io/jangroth/homekube-bakery/coder-workspace` | Coder template |
-| Hermes image | `ghcr.io/jangroth/homekube-bakery/hermes` | herminator |
+| Image | Reference | Consumer | Status |
+|---|---|---|---|
+| Coder workspace image | `ghcr.io/jangroth/homekube-bakery/coder-workspace` | Coder template | Published |
+| Hermes image | `ghcr.io/jangroth/homekube-bakery/hermes` | herminator | Not yet built |
 
 ## Where things live
 
@@ -24,6 +24,13 @@ Needs Docker on an arm64 host and [bats](https://github.com/bats-core/bats-core)
 
 ```sh
 ./test.sh coder-workspace
+```
+
+The release scripts' tests (bats and `python3`) and the shellcheck lint need no Docker:
+
+```sh
+bats .github/scripts/tests
+./lint.sh
 ```
 
 ## Changing the contract
