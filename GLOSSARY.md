@@ -26,6 +26,10 @@ _Avoid_: spec, requirements
 **Contract test**:
 An automated check that a built image meets one requirement of its contract. An image is published only if all its contract tests pass.
 
+**Manifest**:
+An image's sorted list of base image references, pinned tool versions and installed Debian packages, recomputed from the image and its Dockerfile. Scheduled rebuilds publish only when it differs from the last release's.
+_Avoid_: OCI manifest, SBOM
+
 **Consumer**:
 A homekube component that pulls a bakery image and relies on its contract, such as the Coder template or herminator.
 _Avoid_: client, user

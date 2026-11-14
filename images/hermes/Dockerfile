@@ -29,6 +29,7 @@ LABEL org.opencontainers.image.source=https://github.com/jangroth/homekube-baker
 
 # Upstream's uv directory is versioned, so the link target is resolved at build time.
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends jq \
  && rm -rf /var/lib/apt/lists/* \
  && set -- /opt/hermes/tools/uv-*-linux-arm64 \

@@ -19,6 +19,7 @@ FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c5
 LABEL org.opencontainers.image.source=https://github.com/jangroth/homekube-bakery
 
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends curl git openssh-client bash tree ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
  && groupadd -g 1000 coder \

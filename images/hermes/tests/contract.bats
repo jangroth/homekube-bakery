@@ -63,9 +63,9 @@ image_config() {
   [ "$output" = "" ]
 }
 
-@test "the uncompressed bytes added over the pinned upstream Hermes image are within the 535 MB budget" {
+@test "the uncompressed bytes added over the pinned upstream Hermes image are within the 600 MB budget" {
   upstream=$(upstream_image)
   docker pull -q --platform linux/arm64 "$upstream" >/dev/null
   added=$(( $(image_size) - $(image_size "$upstream") ))
-  [ "$added" -le 535000000 ]
+  [ "$added" -le 600000000 ]
 }

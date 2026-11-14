@@ -4,7 +4,7 @@ Builds and publishes the container images that [homekube](https://github.com/jan
 
 ## Images
 
-Public packages on GHCR, `linux/arm64`, with immutable semver tags. Pushes to `main` and manual runs on `main` publish; other branches only build and test. [`CONTRACT.md`](CONTRACT.md#consuming-an-image) says how to consume them. GitHub's "Latest" release is the most recent publish of any image; pin tags and digests rather than relying on it.
+Public packages on GHCR, `linux/arm64`, with immutable semver tags. Pushes to `main` and manual runs on `main` publish; other branches only build and test. A weekly run on Fridays rebuilds every image with current Debian updates and publishes a patch only where its manifest changed. [`CONTRACT.md`](CONTRACT.md#consuming-an-image) says how to consume them. GitHub's "Latest" release is the most recent publish of any image; pin tags and digests rather than relying on it.
 
 | Image | Reference | Consumer | Status |
 |---|---|---|---|

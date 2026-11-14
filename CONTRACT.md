@@ -9,7 +9,7 @@ What each bakery image guarantees its consumers. Every requirement is enforced b
 | Coder workspace image | `ghcr.io/jangroth/homekube-bakery/coder-workspace` | `0.2.0` |
 | Hermes image | `ghcr.io/jangroth/homekube-bakery/hermes` | `0.1.0` |
 
-Tags are immutable `MAJOR.MINOR.PATCH` with no `v` and no `latest` ([ADR 0001](docs/adr/0001-semver-tags-with-computed-patch.md)). A major bump breaks the contract, a minor bump adds to it, and a patch keeps it. Each tag has a GitHub Release, tagged `<image>/<version>`.
+Tags are immutable `MAJOR.MINOR.PATCH` with no `v` and no `latest` ([ADR 0001](docs/adr/0001-semver-tags-with-computed-patch.md)). A major bump breaks the contract, a minor bump adds to it, and a patch keeps it. Each tag has a GitHub Release, tagged `<image>/<version>`, whose notes list the tool, base image and package changes since the previous release, with the full manifest attached as `manifest.txt`.
 
 Pin by tag and digest, and place a `# renovate:` comment above the reference so Renovate keeps it current:
 
@@ -61,7 +61,7 @@ Upstream's `PATH` puts `/opt/data/.local/bin`, on Hermes's data volume, ahead of
 | `jq`, `uv` and `uvx` are on `PATH` and run as uid 1000 after the user remap | [`jq, uv and uvx print their versions as uid 1000 after the upstream user remap`](images/hermes/tests/contract.bats) |
 | `gh` and the Coder CLI (`coder`) are on `PATH` and run as uid 1000 after the user remap | [`gh and coder print their versions as uid 1000 after the upstream user remap`](images/hermes/tests/contract.bats) |
 | uid 1000 cannot write to `jq`, `uv`, `uvx`, `gh`, `coder`, the files they resolve to, or their directories | [`uid 1000 cannot write to jq, uv, uvx, gh or coder, the files they resolve to, or their directories`](images/hermes/tests/contract.bats) |
-| The uncompressed bytes added over the pinned upstream image are at most 535 MB | [`the uncompressed bytes added over the pinned upstream Hermes image are within the 535 MB budget`](images/hermes/tests/contract.bats) |
+| The uncompressed bytes added over the pinned upstream image are at most 600 MB | [`the uncompressed bytes added over the pinned upstream Hermes image are within the 600 MB budget`](images/hermes/tests/contract.bats) |
 | `sh` and `cat` are present for init steps | [`sh and cat run restricted with the entrypoint replaced`](images/hermes/tests/ca.bats) |
 | The CA bundle is at `/etc/ssl/certs/ca-certificates.crt` | [`the CA bundle is at /etc/ssl/certs/ca-certificates.crt`](images/hermes/tests/ca.bats) |
 | The CA-bundle init step (`sh` and `cat` concatenating the system bundle with an extra CA) works under the restricted securityContext | [`the CA-bundle init step runs restricted and writes the system CAs followed by the extra CA`](images/hermes/tests/ca.bats) |

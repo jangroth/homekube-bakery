@@ -93,6 +93,12 @@ changed_images() {
   [ "$output" = '["coder-workspace","hermes"]' ]
 }
 
+@test "a scheduled run affects every image, even with nothing changed since their releases" {
+  changed_images schedule "" refs/heads/main
+  [ "$status" -eq 0 ]
+  [ "$output" = '["coder-workspace","hermes"]' ]
+}
+
 @test "a CI change on a branch affects every image" {
   commit_change .github/scripts/next-tag.sh
   changed_images push "$before" refs/heads/renovate/debian

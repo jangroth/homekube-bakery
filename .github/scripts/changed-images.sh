@@ -15,7 +15,7 @@ shared=(test test.sh)
 
 all_images() { find images -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort; }
 
-if [ "$event" = workflow_dispatch ]; then
+if [ "$event" = workflow_dispatch ] || [ "$event" = schedule ]; then
   images=$(all_images)
 elif [ "$ref" = refs/heads/main ]; then
   if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
@@ -25,8 +25,7 @@ elif [ "$ref" = refs/heads/main ]; then
   # Main publishes, so each image is compared with its last release; CI-only changes don't count.
   images=""
   while read -r image; do
-    tags=$(git tag --list "$image/*" --merged HEAD --sort=-v:refname)
-    last_release_tag=$(grep -m1 -xE "$image/[0-9]+\.[0-9]+\.[0-9]+" <<<"$tags" || true)
+    last_release_tag=$("$(dirname "$0")/last-release-tag.sh" "$image")
     if [ -z "$last_release_tag" ] || ! git diff --quiet "$last_release_tag" HEAD -- "images/$image" "${shared[@]}"; then
       images+="$image"$'\n'
     fi
