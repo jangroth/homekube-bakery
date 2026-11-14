@@ -55,6 +55,7 @@ image_label() {
 }
 
 # Uncompressed bytes; `docker image inspect .Size` is compressed under the containerd image store.
+# Usage: image_size [<reference>]   defaults to IMAGE
 image_size() {
-  docker history --human=false --format '{{.Size}}' "$IMAGE" | awk '{ s += $1 } END { print s }'
+  docker history --human=false --format '{{.Size}}' "${1:-$IMAGE}" | awk '{ s += $1 } END { print s }'
 }

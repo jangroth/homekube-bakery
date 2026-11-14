@@ -2,12 +2,12 @@ setup() {
   load ../../../test/helpers/consumer
 }
 
-# The single FROM reference in the Dockerfile; fails unless it is pinned by vX.Y.Z tag and digest.
+# The final stage's FROM reference in the Dockerfile; fails unless it is pinned by vX.Y.Z tag and digest.
 upstream_image() {
   local ref
-  ref=$(sed -nE 's/^FROM[[:space:]]+([^[:space:]]+).*/\1/p' "$BATS_TEST_DIRNAME/../Dockerfile" | tr -d '\r')
+  ref=$(sed -nE 's/^FROM[[:space:]]+([^[:space:]]+).*/\1/p' "$BATS_TEST_DIRNAME/../Dockerfile" | tail -n 1 | tr -d '\r')
   if ! [[ "$ref" =~ ^nousresearch/hermes-agent:v[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$ ]]; then
-    echo "expected one FROM pinned by vX.Y.Z tag and digest, got '$ref'" >&2
+    echo "expected the final FROM pinned by vX.Y.Z tag and digest, got '$ref'" >&2
     return 1
   fi
   echo "$ref"
@@ -43,8 +43,16 @@ image_config() {
   [[ "${lines[3]}" =~ ^uvx\ [0-9]+\.[0-9]+\.[0-9]+ ]]
 }
 
-@test "uid 1000 cannot write to jq, uv or uvx, the files they resolve to, or their directories" {
-  run_as_hermes sh -c 'for tool in jq uv uvx; do
+@test "gh and coder print their versions as uid 1000 after the upstream user remap" {
+  run_as_hermes sh -c 'id -u && gh --version | head -n 1 && coder --version | head -n 1'
+  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = "1000" ]
+  [[ "${lines[1]}" =~ ^gh\ version\ [0-9]+\.[0-9]+\.[0-9]+ ]]
+  [[ "${lines[2]}" =~ ^Coder\ v[0-9]+\.[0-9]+\.[0-9]+ ]]
+}
+
+@test "uid 1000 cannot write to jq, uv, uvx, gh or coder, the files they resolve to, or their directories" {
+  run_as_hermes sh -c 'for tool in jq uv uvx gh coder; do
       bin=$(command -v "$tool") || { echo "$tool is not on PATH"; continue; }
       real=$(readlink -f "$bin")
       for path in "$bin" "$(dirname "$bin")" "$real" "$(dirname "$real")"; do
@@ -53,4 +61,11 @@ image_config() {
     done'
   [ "$status" -eq 0 ]
   [ "$output" = "" ]
+}
+
+@test "the uncompressed bytes added over the pinned upstream Hermes image are within the 535 MB budget" {
+  upstream=$(upstream_image)
+  docker pull -q --platform linux/arm64 "$upstream" >/dev/null
+  added=$(( $(image_size) - $(image_size "$upstream") ))
+  [ "$added" -le 535000000 ]
 }
