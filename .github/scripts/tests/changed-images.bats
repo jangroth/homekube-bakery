@@ -1,6 +1,6 @@
 setup() {
   git init -q -b main "$BATS_TEST_TMPDIR/repo"
-  cd "$BATS_TEST_TMPDIR/repo"
+  cd "$BATS_TEST_TMPDIR/repo" || return
   git config user.email bakery@example.com
   git config user.name bakery
   git config commit.gpgsign false
