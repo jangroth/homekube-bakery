@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "customManagers:dockerfileVersions"],
+  "automerge": true,
+  "automergeType": "branch",
+  "packageRules": [
+    {
+      "matchDepNames": ["anomalyco/opencode", "cli/cli", "coder/coder"],
+      "extractVersion": "^v(?<version>\\d+\\.\\d+\\.\\d+)$"
+    },
+    {
+      "matchDepNames": ["nousresearch/hermes-agent"],
+      "allowedVersions": "/^v\\d+\\.\\d+\\.\\d+$/"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "matchDepNames": ["nousresearch/hermes-agent"],
+      "matchCurrentVersion": "/^v0\\./",
+      "matchUpdateTypes": ["minor"],
+      "automerge": false,
+      "dependencyDashboardApproval": true
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "dependencyDashboardApproval": true
+    }
+  ]
+}
