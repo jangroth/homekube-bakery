@@ -49,6 +49,8 @@ Tests run the image as the Coder template does: as `1000:1000`, with no-new-priv
 
 Built on the upstream Hermes image. Tests run the image as herminator does. The main container starts as root with `HERMES_UID=1000` and `HERMES_GID=1000` and upstream's entrypoint intact, which remaps the `hermes` user to 1000:1000 before running the command. Init steps replace the entrypoint and run as `1000:1000`, with no-new-privileges and all capabilities dropped. The exceptions are the config and source-label tests, which read the image config. A full Hermes boot is not tested: it exercises upstream and needs credentials.
 
+Upstream's `PATH` puts `/opt/data/.local/bin`, on Hermes's data volume, ahead of `/usr/local/bin`, so Hermes can shadow the added tools. The contract guarantees only that it can't modify them.
+
 | Requirement | Contract test |
 |---|---|
 | Built on `nousresearch/hermes-agent`, pinned by `vX.Y.Z` tag and digest | [`the upstream Hermes image is pinned by vX.Y.Z tag and digest`](images/hermes/tests/contract.bats) |
