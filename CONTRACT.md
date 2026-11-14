@@ -7,6 +7,7 @@ What each bakery image guarantees its consumers. Every requirement is enforced b
 | Image | Reference | Contract guaranteed from |
 |---|---|---|
 | Coder workspace image | `ghcr.io/jangroth/homekube-bakery/coder-workspace` | `0.2.0` |
+| Hermes image | `ghcr.io/jangroth/homekube-bakery/hermes` | `0.1.0` |
 
 Tags are immutable `MAJOR.MINOR.PATCH` with no `v` and no `latest` ([ADR 0001](docs/adr/0001-semver-tags-with-computed-patch.md)). A major bump breaks the contract, a minor bump adds to it, and a patch keeps it. Each tag has a GitHub Release, tagged `<image>/<version>`.
 
@@ -43,3 +44,18 @@ Tests run the image as the Coder template does: as `1000:1000`, with no-new-priv
 | The CA bundle is at `/etc/ssl/certs/ca-certificates.crt` | [`the CA bundle is at /etc/ssl/certs/ca-certificates.crt`](images/coder-workspace/tests/contract.bats) |
 | `curl` honours a CA bundle passed through `CURL_CA_BUNDLE` | [`curl trusts a CA bundle passed through CURL_CA_BUNDLE`](images/coder-workspace/tests/ca.bats) |
 | The CA-bundle init step (`sh` and `cat` concatenating the system bundle with an extra CA) works under the restricted securityContext | [`the CA-bundle init step runs restricted and keeps the system CAs alongside the extra CA`](images/coder-workspace/tests/ca.bats) |
+
+## Hermes image
+
+Built on the upstream Hermes image. Tests run the image as herminator does. The main container starts as root with `HERMES_UID=1000` and `HERMES_GID=1000` and upstream's entrypoint intact, which remaps the `hermes` user to 1000:1000 before running the command. Init steps replace the entrypoint and run as `1000:1000`, with no-new-privileges and all capabilities dropped. The exceptions are the config and source-label tests, which read the image config. A full Hermes boot is not tested: it exercises upstream and needs credentials.
+
+| Requirement | Contract test |
+|---|---|
+| Built on `nousresearch/hermes-agent`, pinned by `vX.Y.Z` tag and digest | [`the upstream Hermes image is pinned by vX.Y.Z tag and digest`](images/hermes/tests/contract.bats) |
+| Entrypoint, cmd, user and volumes are upstream's, unchanged | [`entrypoint, cmd, user and volumes are identical to the pinned upstream Hermes image's`](images/hermes/tests/contract.bats) |
+| The `org.opencontainers.image.source` label points at this repo, so Renovate finds the release notes | [`the source label points at the bakery repo`](images/hermes/tests/contract.bats) |
+| `jq`, `uv` and `uvx` are on `PATH` and run as uid 1000 after the user remap | [`jq, uv and uvx print their versions as uid 1000 after the upstream user remap`](images/hermes/tests/contract.bats) |
+| uid 1000 cannot write to `jq`, `uv`, `uvx`, the files they resolve to, or their directories | [`uid 1000 cannot write to jq, uv or uvx, the files they resolve to, or their directories`](images/hermes/tests/contract.bats) |
+| `sh` and `cat` are present for init steps | [`sh and cat run restricted with the entrypoint replaced`](images/hermes/tests/ca.bats) |
+| The CA bundle is at `/etc/ssl/certs/ca-certificates.crt` | [`the CA bundle is at /etc/ssl/certs/ca-certificates.crt`](images/hermes/tests/ca.bats) |
+| The CA-bundle init step (`sh` and `cat` concatenating the system bundle with an extra CA) works under the restricted securityContext | [`the CA-bundle init step runs restricted and writes the system CAs followed by the extra CA`](images/hermes/tests/ca.bats) |

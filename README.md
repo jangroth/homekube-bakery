@@ -9,7 +9,7 @@ Public packages on GHCR, `linux/arm64`, with immutable semver tags. Pushes to `m
 | Image | Reference | Consumer | Status |
 |---|---|---|---|
 | Coder workspace image | `ghcr.io/jangroth/homekube-bakery/coder-workspace` | Coder template | Published |
-| Hermes image | `ghcr.io/jangroth/homekube-bakery/hermes` | herminator | Not yet built |
+| Hermes image | `ghcr.io/jangroth/homekube-bakery/hermes` | herminator | Published |
 
 ## Where things live
 

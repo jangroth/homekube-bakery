@@ -1,12 +1,6 @@
 load ../../../test/helpers/consumer
 load ../../../test/helpers/tls
 
-# Creates a volume shaped like a pod emptyDir: empty and mode 0777.
-make_emptydir_volume() {
-  docker volume create "$1" >/dev/null
-  docker run --rm --user 0 -v "$1:/d" "$IMAGE" chmod 777 /d
-}
-
 # Runs the CA-bundle init container: the system bundle plus <extra-ca>, written to <out-volume>/ca-certificates.crt.
 run_ca_bundle_init() {
   run_as_coder_with -v "$1:/extra/ca.crt:ro" -v "$2:/out" -- \
