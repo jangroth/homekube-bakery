@@ -24,6 +24,8 @@ Review major bumps by hand: they mean a requirement below changed or went away.
 
 Tests run the image as the Coder template does: as `1000:1000`, with no-new-privileges, all capabilities dropped, and an empty uid-1000-owned tmpfs over `/home/coder`. The exceptions are the default-user and source-label tests, which read the image config (running as `1000:1000` would hide the default user), and the size-budget test, which reads the image's layers.
 
+`opencode` and `gh` are upstream release binaries; the build fails unless each matches upstream's published checksum.
+
 | Requirement | Contract test |
 |---|---|
 | The default user is `coder` | [`default user is coder`](images/coder-workspace/tests/contract.bats) |
@@ -37,10 +39,12 @@ Tests run the image as the Coder template does: as `1000:1000`, with no-new-priv
 | uid 1000 can create files in `/tmp`, where the Coder agent keeps its binary, logs and socket | [`uid 1000 can create files in /tmp`](images/coder-workspace/tests/contract.bats) |
 | `sh`, `curl`, `mktemp`, `chmod`, `head` and `grep` are present for the Coder agent init script | [`the Coder agent init script's commands are present and runnable`](images/coder-workspace/tests/contract.bats) |
 | `opencode` is on `PATH` and runs as uid 1000 with an empty home | [`opencode prints its version as uid 1000 with an empty home`](images/coder-workspace/tests/contract.bats) |
-| `opencode` and its directory are owned by root | [`opencode and its directory are owned by root`](images/coder-workspace/tests/contract.bats) |
-| uid 1000 cannot write to `opencode` or its directory | [`uid 1000 cannot write to opencode or its directory`](images/coder-workspace/tests/contract.bats) |
+| `gh` is on `PATH` and runs as uid 1000 with an empty home | [`gh prints its version as uid 1000 with an empty home`](images/coder-workspace/tests/contract.bats) |
+| `opencode`, `gh` and their directories are owned by root | [`opencode, gh and their directories are owned by root`](images/coder-workspace/tests/contract.bats) |
+| uid 1000 cannot write to `opencode`, `gh` or their directories | [`uid 1000 cannot write to opencode, gh or their directories`](images/coder-workspace/tests/contract.bats) |
 | OpenCode keeps its config and state under `/home/coder`, so they persist with the Workspace | [`OpenCode creates its config and state under /home/coder on first use`](images/coder-workspace/tests/contract.bats) |
-| The uncompressed image is at most 535 MB | [`the uncompressed image is within its 535 MB size budget`](images/coder-workspace/tests/contract.bats) |
+| `gh` keeps its config under `/home/coder`, so it persists with the Workspace | [`gh creates its config under /home/coder on first use`](images/coder-workspace/tests/contract.bats) |
+| The uncompressed image is at most 570 MB | [`the uncompressed image is within its 570 MB size budget`](images/coder-workspace/tests/contract.bats) |
 | The CA bundle is at `/etc/ssl/certs/ca-certificates.crt` | [`the CA bundle is at /etc/ssl/certs/ca-certificates.crt`](images/coder-workspace/tests/contract.bats) |
 | `curl` honours a CA bundle passed through `CURL_CA_BUNDLE` | [`curl trusts a CA bundle passed through CURL_CA_BUNDLE`](images/coder-workspace/tests/ca.bats) |
 | The CA-bundle init step (`sh` and `cat` concatenating the system bundle with an extra CA) works under the restricted securityContext | [`the CA-bundle init step runs restricted and keeps the system CAs alongside the extra CA`](images/coder-workspace/tests/ca.bats) |

@@ -62,16 +62,33 @@ setup() {
   [[ "$output" =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]
 }
 
-@test "opencode and its directory are owned by root" {
-  run_as_coder sh -c 'bin="$(command -v opencode)" && stat -c %U "$bin" "$(dirname "$bin")"'
+@test "gh prints its version as uid 1000 with an empty home" {
+  run_as_coder gh --version
   [ "$status" -eq 0 ]
-  [ "${lines[0]}" = "root" ]
-  [ "${lines[1]}" = "root" ]
+  [[ "${lines[0]}" =~ ^gh\ version\ [0-9]+\.[0-9]+\.[0-9]+ ]]
 }
 
-@test "uid 1000 cannot write to opencode or its directory" {
-  run_as_coder sh -c 'bin="$(command -v opencode)" && [ ! -w "$bin" ] && [ ! -w "$(dirname "$bin")" ]'
+@test "opencode, gh and their directories are owned by root" {
+  run_as_coder sh -c 'for tool in opencode gh; do
+      bin=$(command -v "$tool") || { echo "$tool is not on PATH"; continue; }
+      stat -c "%U %n" "$bin" "$(dirname "$bin")"
+    done'
   [ "$status" -eq 0 ]
+  [ "$output" = "root /usr/local/bin/opencode
+root /usr/local/bin
+root /usr/local/bin/gh
+root /usr/local/bin" ]
+}
+
+@test "uid 1000 cannot write to opencode, gh or their directories" {
+  run_as_coder sh -c 'for tool in opencode gh; do
+      bin=$(command -v "$tool") || { echo "$tool is not on PATH"; continue; }
+      for path in "$bin" "$(dirname "$bin")"; do
+        [ ! -w "$path" ] || echo "$path is writable"
+      done
+    done'
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
 }
 
 @test "OpenCode creates its config and state under /home/coder on first use" {
@@ -81,8 +98,14 @@ setup() {
   [ "$output" = "ok" ]
 }
 
-@test "the uncompressed image is within its 535 MB size budget" {
-  [ "$(image_size)" -le 535000000 ]
+@test "gh creates its config under /home/coder on first use" {
+  run_as_coder_with --network none -- sh -c 'gh config set editor vi && test -f "$HOME/.config/gh/config.yml" && echo ok'
+  [ "$status" -eq 0 ]
+  [ "$output" = "ok" ]
+}
+
+@test "the uncompressed image is within its 570 MB size budget" {
+  [ "$(image_size)" -le 570000000 ]
 }
 
 @test "the CA bundle is at /etc/ssl/certs/ca-certificates.crt" {
