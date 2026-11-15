@@ -13,3 +13,8 @@ Judgement calls for review. Anything a tool can check belongs in CI instead.
 - Name each bats test as a behaviour statement in domain vocabulary, so the list of names reads as the specification. Each name says what that test adds over its neighbours.
 - Assert `$status` first, then `$output` or `$lines`, against literal expected values.
 - Wrap the command under test in a thin `run` helper (`next_tag`, `run_as_coder`). Helpers shared across test files live in `test/helpers/`; single-file helpers stay in that file.
+
+## Docs
+
+- A change to trigger, publish or refusal behaviour in `.github/workflows/images.yml` or `.github/scripts/` updates the README's **How images are built and published** in the same commit.
+- `CONTRACT.md` owns what consumers get (tags, release contents); the README owns how CI behaves and links to `CONTRACT.md` for the rest.

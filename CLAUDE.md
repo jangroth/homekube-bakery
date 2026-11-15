@@ -4,7 +4,7 @@
 
 ### Issue tracker
 
-Issues and specs live in GitHub Issues on `jangroth/homekube-bakery`, via `gh`. See `docs/agents/issue-tracker.md`.
+Read and write issues on `jangroth/homekube-bakery` with the `gh` commands in `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
