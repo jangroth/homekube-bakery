@@ -3,7 +3,7 @@ FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c5
 # renovate: datasource=github-releases depName=anomalyco/opencode
 ARG OPENCODE_VERSION=2.3.2
 # renovate: datasource=github-releases depName=cli/cli
-ARG GH_VERSION=2.104.0
+ARG GH_VERSION=2.105.0
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl ca-certificates \
