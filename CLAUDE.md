@@ -16,4 +16,4 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents
 
 ## Git workflow
 
-Every change reaches `main` through a pull request, squash-merged once its `ci` check passes; a ruleset rejects direct pushes, with no bypass. Merging publishes images, so ask before pushing a branch and, separately, before merging. Approval to push is not approval to merge.
+A ruleset rejects direct pushes to `main`, with no bypass, and requires the `ci` check to pass on a branch that is up to date with `main`. Merging publishes images, so ask before pushing a branch and, separately, before merging. Approval to push is not approval to merge.
