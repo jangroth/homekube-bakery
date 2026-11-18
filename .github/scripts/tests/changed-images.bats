@@ -10,7 +10,7 @@ setup() {
   git commit -qm base
   git tag coder-workspace/0.1.0
   git tag hermes/0.1.0
-  before=$(git rev-parse HEAD)
+  git update-ref refs/remotes/origin/main HEAD
 }
 
 # Usage: commit_change <path>
@@ -26,17 +26,15 @@ changed_images() {
 
 @test "a change to an image's directory affects only that image" {
   commit_change images/hermes/Dockerfile
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["hermes"]' ]
 }
 
 @test "on main, an image change since its last release stays affected after a CI-only push" {
   commit_change images/hermes/Dockerfile
-  local unpublished
-  unpublished=$(git rev-parse HEAD)
   commit_change .github/scripts/next-tag.sh
-  changed_images push "$unpublished" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["hermes"]' ]
 }
@@ -44,7 +42,7 @@ changed_images() {
 @test "on main, an image that was never released is affected" {
   git tag -d hermes/0.1.0 >/dev/null
   commit_change .github/scripts/next-tag.sh
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["hermes"]' ]
 }
@@ -54,7 +52,7 @@ changed_images() {
   commit_change images/hermes/Dockerfile
   git tag hermes/0.1.1
   commit_change .github/scripts/next-tag.sh
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["coder-workspace"]' ]
 }
@@ -63,7 +61,7 @@ changed_images() {
   commit_change images/hermes/Dockerfile
   git tag hermes/0.2.0-rc1
   git tag hermes/latest
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["hermes"]' ]
 }
@@ -71,7 +69,7 @@ changed_images() {
 @test "on main, a shallow clone is rejected because release tags may be missing" {
   git clone -q --depth 1 "file://$PWD" "$BATS_TEST_TMPDIR/shallow"
   cd "$BATS_TEST_TMPDIR/shallow" || return
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -ne 0 ]
   [ "$output" = "changed-images.sh: shallow clone on main, release tags may be missing" ]
 }
@@ -81,48 +79,64 @@ changed_images() {
   git commit -qm "delete hermes"
   local ref
   for ref in refs/heads/main refs/heads/renovate/debian; do
-    changed_images push "$before" "$ref"
+    changed_images push "$ref"
     [ "$status" -eq 0 ]
     [ "$output" = '[]' ]
   done
 }
 
 @test "a manual run affects every image" {
-  changed_images workflow_dispatch "$before" refs/heads/main
+  changed_images workflow_dispatch refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["coder-workspace","hermes"]' ]
 }
 
 @test "a scheduled run affects every image, even with nothing changed since their releases" {
-  changed_images schedule "" refs/heads/main
+  changed_images schedule refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["coder-workspace","hermes"]' ]
 }
 
 @test "a CI change on a branch affects every image" {
   commit_change .github/scripts/next-tag.sh
-  changed_images push "$before" refs/heads/renovate/debian
+  changed_images push refs/heads/renovate/debian
   [ "$status" -eq 0 ]
   [ "$output" = '["coder-workspace","hermes"]' ]
 }
 
+@test "on a branch, an image change stays affected after a later push that changes no image" {
+  git switch -qc feature
+  commit_change images/hermes/Dockerfile
+  commit_change README.md
+  changed_images push refs/heads/feature
+  [ "$status" -eq 0 ]
+  [ "$output" = '["hermes"]' ]
+}
+
+@test "on a branch, a missing origin/main is rejected because there is nothing to compare with" {
+  git update-ref -d refs/remotes/origin/main
+  changed_images push refs/heads/feature
+  [ "$status" -ne 0 ]
+  [ "$output" = "changed-images.sh: no origin/main to compare the branch with" ]
+}
+
 @test "a CI change on main affects no image, so nothing republishes" {
   commit_change .github/scripts/next-tag.sh
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '[]' ]
 }
 
 @test "a shared test helper change on main affects every image" {
   commit_change test/helpers/consumer.bash
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["coder-workspace","hermes"]' ]
 }
 
 @test "a test runner change on main affects every image" {
   commit_change test.sh
-  changed_images push "$before" refs/heads/main
+  changed_images push refs/heads/main
   [ "$status" -eq 0 ]
   [ "$output" = '["coder-workspace","hermes"]' ]
 }
@@ -130,7 +144,7 @@ changed_images() {
 @test "a ref that is not a git ref is rejected" {
   local bad
   for bad in '' main $'refs/heads/main\r'; do
-    changed_images push "$before" "$bad"
+    changed_images push "$bad"
     [ "$status" -ne 0 ]
     [ "$output" = "changed-images.sh: expected a git ref, got '$bad'" ]
   done
