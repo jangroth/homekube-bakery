@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "customManagers:dockerfileVersions"],
   "automerge": true,
-  "automergeType": "branch",
+  "automergeType": "pr",
   "packageRules": [
     {
       "matchDepNames": ["anomalyco/opencode", "cli/cli", "coder/coder"],

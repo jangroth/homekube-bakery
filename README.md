@@ -15,14 +15,16 @@ Public packages on GHCR, `linux/arm64`, with immutable semver tags. [`CONTRACT.m
 
 One workflow, [`images.yml`](.github/workflows/images.yml). Every run tests the release scripts and lints them, and nothing publishes unless both pass.
 
+`main` takes no direct pushes: every change is a squash-merged pull request, and a ruleset with no bypass requires the `ci` check, which passes only when the script tests, lint and every contract test run on the branch pass.
+
 | Trigger | What CI does |
 |---|---|
-| Push to a branch other than `main` | Builds and runs the contract tests for each image whose directory changed. A change to `.github/`, `test/` or `test.sh` builds every image. Publishes nothing. |
-| Push to `main` | Publishes each image whose directory, `test/` or `test.sh` differs from its last release, or that has no release yet. CI-only changes publish nothing. |
+| Push to a branch other than `main` | Builds and runs the contract tests for each image whose directory changed since the branch left `main`. A change to `.github/`, `test/` or `test.sh` builds every image. Publishes nothing. |
+| Merge a pull request into `main` | Publishes each image whose directory, `test/` or `test.sh` differs from its last release, or that has no release yet. CI-only changes publish nothing. |
 | Manual run (`workflow_dispatch`) | On `main`, publishes every image. On another branch, builds and tests every image. |
 | Weekly, Fridays 03:00 UTC | Rebuilds and tests every image, and publishes a patch only where its manifest differs from the last release. |
 
-Dependency bumps reach `main` through [Renovate](renovate.json). It pushes each bump to a `renovate/*` branch, where CI builds and tests it. Once that passes, it merges the branch into `main`, which publishes a patch of each image whose Dockerfile changed; GitHub Actions bumps publish nothing. Major bumps, and minor bumps of the upstream Hermes image while it is `v0.x`, wait for approval on the Dependency Dashboard issue.
+Dependency bumps reach `main` through [Renovate](renovate.json). It opens a pull request for each bump from a `renovate/*` branch, where CI builds and tests it. GitHub auto-merges the pull request once `ci` passes, which publishes a patch of each image whose Dockerfile changed; GitHub Actions bumps publish nothing. Major bumps, and minor bumps of the upstream Hermes image while it is `v0.x`, wait for approval on the Dependency Dashboard issue.
 
 ### The publish pipeline
 

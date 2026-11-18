@@ -23,10 +23,8 @@ jobs:
         with:
           fetch-depth: 0
       - id: images
-        env:
-          BEFORE: ${{ github.event.before }}
         run: |
-          images=$(.github/scripts/changed-images.sh "$GITHUB_EVENT_NAME" "$BEFORE" "$GITHUB_REF")
+          images=$(.github/scripts/changed-images.sh "$GITHUB_EVENT_NAME" "$GITHUB_REF")
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
   scripts:
@@ -49,6 +47,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: sudo apt-get update && sudo apt-get install -y bats
       - run: ./test.sh ${{ matrix.image }}
+
+  # The one check the main ruleset requires; a skipped test still passes.
+  ci:
+    needs: [changes, scripts, test]
+    if: always()
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
 
   publish:
     needs: [changes, scripts]

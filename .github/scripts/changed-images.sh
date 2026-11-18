@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Usage: changed-images.sh <event> <before-sha> <ref>
-# Prints a JSON array of the images under images/ that need building. On main, <before-sha> is ignored.
+# Usage: changed-images.sh <event> <ref>
+# Prints a JSON array of the images under images/ that need building.
 set -euo pipefail
 
 event="$1"
-before="$2"
-ref="$3"
+ref="$2"
 if ! [[ "$ref" =~ ^refs/[^[:space:]]+$ ]]; then
   echo "changed-images.sh: expected a git ref, got '$ref'" >&2
   exit 1
@@ -31,14 +30,17 @@ elif [ "$ref" = refs/heads/main ]; then
     fi
   done < <(all_images)
 else
-  if ! git cat-file -e "$before^{commit}" 2>/dev/null; then
-    before=$(git merge-base origin/main HEAD)
+  if ! git rev-parse -q --verify refs/remotes/origin/main >/dev/null; then
+    echo "changed-images.sh: no origin/main to compare the branch with" >&2
+    exit 1
   fi
-  if ! git diff --quiet "$before" HEAD -- "${shared[@]}" .github; then
+  # Diff the whole branch: the head commit's checks gate the merge.
+  base=$(git merge-base origin/main HEAD)
+  if ! git diff --quiet "$base" HEAD -- "${shared[@]}" .github; then
     images=$(all_images)
   else
     # Existing directories only: a deleted image shows up in the diff too.
-    images=$(git diff --name-only "$before" HEAD -- images | sed -nE 's|^images/([^/]+)/.*|\1|p' | sort -u \
+    images=$(git diff --name-only "$base" HEAD -- images | sed -nE 's|^images/([^/]+)/.*|\1|p' | sort -u \
       | while read -r i; do if [ -d "images/$i" ]; then echo "$i"; fi; done)
   fi
 fi
