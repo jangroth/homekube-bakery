@@ -1,5 +1,7 @@
 # homekube-bakery
 
+Builds and publishes every container image homekube runs (GHCR, `linux/arm64`). What each image guarantees is in `CONTRACT.md`.
+
 ## Agent skills
 
 ### Issue tracker
