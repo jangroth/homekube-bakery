@@ -15,7 +15,7 @@ Public packages on GHCR, `linux/arm64`, with immutable semver tags. [`CONTRACT.m
 
 One workflow, [`images.yml`](.github/workflows/images.yml). Every run tests the release scripts and lints them, and nothing publishes unless both pass.
 
-`main` takes no direct pushes: every change is a squash-merged pull request, and a ruleset with no bypass requires the `ci` check, which passes only when the script tests, lint and every contract test run on the branch pass.
+`main` takes no direct pushes: every change is a pull request, rebased onto `main` and merged with a merge commit, and a ruleset with no bypass requires the `ci` check, which passes only when the script tests, lint and every contract test run on the branch pass.
 
 | Trigger | What CI does |
 |---|---|
