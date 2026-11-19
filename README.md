@@ -11,11 +11,32 @@ Public packages on GHCR, `linux/arm64`, with immutable semver tags. [`CONTRACT.m
 | Coder workspace image | `ghcr.io/jangroth/homekube-bakery/coder-workspace` | Coder template | Published |
 | Hermes image | `ghcr.io/jangroth/homekube-bakery/hermes` | herminator | Published |
 
+## Tracked dependencies
+
+The base images and tools each image pins on `main`. Renovate bumps these rows with the Dockerfiles, and CI fails if they drift apart. For what a published tag contains, see [`CONTRACT.md`](CONTRACT.md#consuming-an-image).
+
+### Coder workspace image (`coder-workspace`)
+
+| Dependency | Version |
+|---|---|
+| `debian` | `13-slim` |
+| `anomalyco/opencode` | `2.3.2` |
+| `cli/cli` | `2.105.0` |
+
+### Hermes image (`hermes`)
+
+| Dependency | Version |
+|---|---|
+| `nousresearch/hermes-agent` | `v0.22.2` |
+| `debian` | `13-slim` |
+| `cli/cli` | `2.105.0` |
+| `coder/coder` | `2.39.4` |
+
 ## How images are built and published
 
-One workflow, [`images.yml`](.github/workflows/images.yml). Every run tests the release scripts and lints them, and nothing publishes unless both pass.
+One workflow, [`images.yml`](.github/workflows/images.yml). Every run tests the release scripts, lints them and checks the README's tracked dependencies against the Dockerfiles, and nothing publishes unless all three pass.
 
-`main` takes no direct pushes: every change is a squash-merged pull request, and a ruleset with no bypass requires the `ci` check, which passes only when the script tests, lint and every contract test run on the branch pass.
+`main` takes no direct pushes: every change is a pull request, rebased onto `main` and merged with a merge commit, and a ruleset with no bypass requires the `ci` check, which passes only when the script tests, lint, the README drift check and every contract test run on the branch pass.
 
 | Trigger | What CI does |
 |---|---|
@@ -72,11 +93,12 @@ Needs Docker on an arm64 host and [bats](https://github.com/bats-core/bats-core)
 ./test.sh coder-workspace
 ```
 
-The release scripts' tests (bats and `python3`) and the shellcheck lint need no Docker:
+The release scripts' tests (bats and `python3`), the shellcheck lint and the README drift check need no Docker:
 
 ```sh
 bats .github/scripts/tests
 ./lint.sh
+.github/scripts/readme-drift.sh README.md images
 ```
 
 ## Changing the contract

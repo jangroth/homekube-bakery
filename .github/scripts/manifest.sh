@@ -10,30 +10,7 @@ fi
 dockerfile="$1"
 image_ref="$2"
 
-pins=$(awk '
-  { sub(/\r$/, "") }
-  toupper($1) == "FROM" {
-    ref = ""
-    for (i = 2; i <= NF; i++) if ($i !~ /^--/) { ref = $i; break }
-    if (toupper($(i + 1)) == "AS") stage[tolower($(i + 2))] = 1
-    if (!(tolower(ref) in stage)) {
-      name = ref
-      sub(/[:@].*/, "", name)
-      print "from", name, substr(ref, length(name) + 2)
-    }
-  }
-  match($0, /^# renovate: .*depName=[^ ]+/) {
-    dep = substr($0, RSTART, RLENGTH)
-    sub(/.*depName=/, "", dep)
-    next
-  }
-  dep != "" && toupper($1) == "ARG" {
-    value = $2
-    sub(/^[^=]*=/, "", value)
-    print "tool", dep, value
-  }
-  { dep = "" }
-' "$dockerfile")
+pins=$("$(dirname "$0")/pins.sh" "$dockerfile")
 
 # shellcheck disable=SC2016
 packages=$(docker run --rm --platform linux/arm64 --entrypoint dpkg-query "$image_ref" -W -f '${binary:Package} ${Version}\n' \

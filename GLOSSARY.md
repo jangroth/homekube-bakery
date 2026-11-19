@@ -30,6 +30,10 @@ An automated check that a built image meets one requirement of its contract. An 
 An image's sorted list of base image references, pinned tool versions and installed Debian packages, recomputed from the image and its Dockerfile. Scheduled rebuilds publish only when it differs from the last release's.
 _Avoid_: OCI manifest, SBOM
 
+**Tracked dependency**:
+A base image or tool whose version a bakery image pins in its Dockerfile and that automated dependency updates bump. A subset of the image's manifest.
+_Avoid_: pinned tool (when the base image is meant too), dependency (unqualified)
+
 **Consumer**:
 A homekube component that pulls a bakery image and relies on its contract, such as the Coder template or herminator.
 _Avoid_: client, user
