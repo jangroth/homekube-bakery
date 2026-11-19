@@ -3,6 +3,23 @@
   "extends": ["config:recommended", "customManagers:dockerfileVersions"],
   "automerge": true,
   "automergeType": "pr",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "README tracked dependency rows, so they move with the Dockerfile bump",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": ["\\| `(?<depName>anomalyco/opencode|cli/cli|coder/coder)` \\| `(?<currentValue>[^`]+)` \\|"],
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "README tracked dependency rows, so they move with the Dockerfile bump",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": ["\\| `(?<depName>nousresearch/hermes-agent)` \\| `(?<currentValue>[^`]+)` \\|"],
+      "datasourceTemplate": "docker"
+    }
+  ],
   "packageRules": [
     {
       "matchDepNames": ["anomalyco/opencode", "cli/cli", "coder/coder"],

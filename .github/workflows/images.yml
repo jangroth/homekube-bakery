@@ -34,6 +34,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y bats shellcheck
       - run: bats .github/scripts/tests
       - run: ./lint.sh
+      - run: .github/scripts/readme-drift.sh README.md images
 
   test:
     needs: changes
