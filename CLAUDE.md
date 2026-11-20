@@ -10,7 +10,7 @@ Read and write issues on `jangroth/homekube-bakery` with the `gh` commands in `d
 
 ### Triage labels
 
-Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
