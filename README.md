@@ -20,7 +20,7 @@ The base images and tools each image pins on `main`. Renovate bumps these rows w
 | Dependency | Version |
 |---|---|
 | `debian` | `13-slim` |
-| `anomalyco/opencode` | `2.3.2` |
+| `anomalyco/opencode` | `2.4.1` |
 | `cli/cli` | `2.105.0` |
 
 ### Hermes image (`hermes`)
