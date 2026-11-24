@@ -1,4 +1,4 @@
-FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS tools
+FROM debian:13-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0 AS tools
 
 # renovate: datasource=github-releases depName=anomalyco/opencode
 ARG OPENCODE_VERSION=2.4.1
@@ -22,7 +22,7 @@ RUN base="https://github.com/cli/cli/releases/download/v${GH_VERSION}" \
  && awk -v f="$tarball" '$2 == f' "gh_${GH_VERSION}_checksums.txt" | sha256sum -c - \
  && tar xzf "$tarball" --strip-components=2 "gh_${GH_VERSION}_linux_arm64/bin/gh"
 
-FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+FROM debian:13-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0
 
 LABEL org.opencontainers.image.source=https://github.com/jangroth/homekube-bakery
 
