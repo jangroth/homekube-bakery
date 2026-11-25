@@ -3,7 +3,7 @@ FROM debian:13-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_VERSION=2.105.0
 # renovate: datasource=github-releases depName=coder/coder
-ARG CODER_VERSION=2.39.4
+ARG CODER_VERSION=2.39.5
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl ca-certificates \
