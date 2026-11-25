@@ -30,7 +30,7 @@ The base images and tools each image pins on `main`. Renovate bumps these rows w
 | `nousresearch/hermes-agent` | `v0.22.2` |
 | `debian` | `13-slim` |
 | `cli/cli` | `2.105.0` |
-| `coder/coder` | `2.39.4` |
+| `coder/coder` | `2.39.5` |
 
 ## How images are built and published
 
