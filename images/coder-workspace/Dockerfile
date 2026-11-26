@@ -1,7 +1,7 @@
 FROM debian:13-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0 AS tools
 
 # renovate: datasource=github-releases depName=anomalyco/opencode
-ARG OPENCODE_VERSION=2.4.1
+ARG OPENCODE_VERSION=2.4.2
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_VERSION=2.105.0
 
