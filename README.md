@@ -21,7 +21,7 @@ The base images and tools each image pins on `main`. Renovate bumps these rows w
 |---|---|
 | `debian` | `13-slim` |
 | `anomalyco/opencode` | `2.4.2` |
-| `cli/cli` | `2.105.0` |
+| `cli/cli` | `2.106.0` |
 
 ### Hermes image (`hermes`)
 
@@ -29,7 +29,7 @@ The base images and tools each image pins on `main`. Renovate bumps these rows w
 |---|---|
 | `nousresearch/hermes-agent` | `v0.22.2` |
 | `debian` | `13-slim` |
-| `cli/cli` | `2.105.0` |
+| `cli/cli` | `2.106.0` |
 | `coder/coder` | `2.39.5` |
 
 ## How images are built and published
